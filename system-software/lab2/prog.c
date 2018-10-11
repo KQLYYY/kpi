@@ -20,22 +20,29 @@ size_t get_file_size(const char *filename)
   return sb.st_size;
 }
 
-uint8_t *get_write_mapping(const char *filename, size_t size)
+const uint8_t *get_read_mapping(const char *filename, size_t size)
 {
   int fd;
   void *p;
-  fd = open(filename, O_RDWR);
+  fd = open(filename, O_RDONLY);
   if (fd == -1) {
     perror("open");
     exit(EXIT_FAILURE);
   }
-  p = mmap(NULL, size, PROT_READ | PROT_WRITE,MAP_SHARED, fd, 0);
+
+  p = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
   if (p == MAP_FAILED) {
     perror("mmap");
     exit(EXIT_FAILURE);
   }
+
   close(fd);
-  return (uint8_t*)p;
+  return (const uint8_t*)p;
+}
+
+void release_mapping(const uint8_t *p, size_t size)
+{
+  munmap((void*)p, size);
 }
 
 int main(int argc, char *argv[])
@@ -47,11 +54,15 @@ int main(int argc, char *argv[])
 
   uint8_t  checksum = 0;
   printf("Filename passed: %s\n", argv[1]);
-  printf("File size: %zd\n",get_file_size(argv[1]));
   size_t size = get_file_size(argv[1]);
-  uint8_t *mapping = get_write_mapping(argv[1], size);
-  for (size_t i = 0; i < size; i++)
-    mapping[i] = 'a';
+  printf("File size: %zd\n",size);
+  printf("Mapping address: %p\n",get_read_mapping(argv[1],size));
+  const uint8_t *  mapping = get_read_mapping(argv[1], size);
+    for (size_t i = 0; i < size; i++)
+      checksum ^= mapping[i];
 
+  release_mapping(mapping,size);
+
+  printf("Check sum: %hhu\n",checksum );
   return 0;
 }

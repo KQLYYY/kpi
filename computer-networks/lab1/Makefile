@@ -1,21 +1,13 @@
-# Это комментарий, который говорит, что переменная CC указывает компилятор, используемый для сборки
-CC=g++
-#Это еще один комментарий. Он поясняет, что в переменной CFLAGS лежат флаги, которые передаются компилятору
-CFLAGS=-o
+C=gcc
 
-all: hello
+TARGET=main
 
-hello: main.o factorial.o hello.o
-	$(CC) main.o factorial.o hello.o -o hello
+CFLAGS = -o
 
-main.o: main.cpp
-	$(CC) $(CFLAGS) main.cpp
+OBJS = *.c
 
-factorial.o: factorial.cpp
-	$(CC) $(CFLAGS) factorial.cpp
-
-hello.o: hello.cpp
-	$(CC) $(CFLAGS) hello.cpp
+main:
+		$(CC) $(CFLAGS) $(TARGET) $(OBJS)
 
 clean:
-	rm -rf *.o hello
+		rm main
